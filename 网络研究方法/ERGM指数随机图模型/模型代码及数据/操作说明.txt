@@ -1,0 +1,42 @@
+1.中文乱码问题：左上角file >- Reopen with encoding >- utf-8；
+2.点击小窗口“Run”运行代码
+3.运行library(statnet)等指令时出错，第一次运行之前需要安装相关工具包，输入instllpackages('statnet')，其它类似指令出错也需提前安装；
+4.一些运行参数用法可输入help（XX） XX为对应参数名称
+5.导入模型中的网络数据需为“0-1”矩阵形式，否则模型拟合不出来，矩阵构建代码放在下方
+6.edges表示边结构，gwesp表示“三角形”结构，gwdegree表示“几何中心度”结构，这三个变量均为内生结构变量
+7.nodecov表示协变量，nodematch表示同配变量，这两种变量均为外生变量
+8.模型跑完后的内容为拟合检验的内容
+
+
+
+lb <- read_xlsx("lb.xlsx")
+lbs <- read_xlsx("lbs.xlsx")
+
+id <- unique(lbs$Id)
+dimx <- length(id)
+data <- data.frame(from = rep(id, dimx), to = rep(id, each = dimx))
+lb$times <- 0
+data_merge <- merge(data, lb, by = c("from", "to"), all.x = T)
+data_merge <- table(data_merge) %>% as.data.frame()
+data_merge <- data_merge[,c(1,2,4)]
+table(data_merge$Freq)
+data_mt <- matrix(data_merge$Freq, ncol = dimx)
+table(data_mt == 0)
+rownames(data_mt) <- id
+colnames(data_mt) <- id
+table(data_mt == 0)
+head(data_mt)
+
+write.table(data_mt, "matrix.txt", quote = F, col.names = T, row.names = T)
+#上方为有向矩阵，构建无向还需添加如下代码
+num <- c()
+for(i in 1:ncol(data_mt)){
+  for(j in 1:ncol(data_mt)){
+    value <- data_mt[i,j] + data_mt[j,i]
+    num <- c(num, value)
+  }
+}
+
+data_mt1 <- matrix(num, ncol = ncol(data_mt))
+rownames(data_mt1) <- rownames(data_mt)
+colnames(data_mt1) <- colnames(data_mt)
